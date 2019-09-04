@@ -1,0 +1,4 @@
+aws logs describe-log-streams --log-group-name /aws/lambda/api_get_users --query logStreams[*].logStreamName
+
+
+aws logs get-log-events --log-group-name /aws/lambda/api_get_users --log-stream-name 2019/09/04/[$LATEST]db931036e80640f390ff8e91654d42d7

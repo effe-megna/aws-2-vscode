@@ -1,27 +1,102 @@
-// The module 'vscode' contains the VS Code extensibility API
-// Import the module and reference it with the alias vscode in your code below
 import * as vscode from 'vscode';
+import * as TE from "fp-ts/lib/TaskEither";
+import * as E from "fp-ts/lib/Either";
+import * as T from "fp-ts/lib/Task";
+import * as P from "fp-ts/lib/pipeable";
+import { exec } from "child_process";
+import { toError } from 'fp-ts/lib/Either';
 
-// this method is called when your extension is activated
-// your extension is activated the very first time the command is executed
+const thenableToPromise = <T>(thenable: Thenable<T>) => new Promise<T>((res, rej) => {
+	thenable.then((v) => res(v), (reasons) => rej(reasons));
+});
+
+const safeExec = (cmd: string): TE.TaskEither<Error, string> =>
+	TE.tryCatch(
+		() => new Promise<string>((res, rej) => {
+			exec(cmd, (err, stdout, stderr) => {
+				if (err) {
+					rej(err);
+				} else {
+					res(stdout);
+				}
+
+				console.log("STDERR ", stderr);
+			});
+		}),
+		toError
+	);
+
 export function activate(context: vscode.ExtensionContext) {
 
-	// Use the console to output diagnostic information (console.log) and errors (console.error)
-	// This line of code will only be executed once when your extension is activated
 	console.log('Congratulations, your extension "aws-2-vs" is now active!');
 
-	// The command has been defined in the package.json file
-	// Now provide the implementation of the command with registerCommand
-	// The commandId parameter must match the command field in package.json
-	let disposable = vscode.commands.registerCommand('extension.helloWorld', () => {
-		// The code you place here will be executed every time your command is executed
+	let disposable = vscode.commands.registerCommand('extension.helloWorld', async () => {
+		const res = await P.pipe(
+			safeExec("aws logs describe-log-groups --query logGroups[*].logGroupName"),
+			TE.chain(v =>
+				TE.fromEither(
+					E.parseJSON(v, toError) as E.Either<Error, string[]>
+				)
+			),
+			TE.chain(logGroups => TE.tryCatch(
+				async () => {
+					const selection = await thenableToPromise(vscode.window.showQuickPick(logGroups));
 
-		// Display a message box to the user
-		vscode.window.showInformationMessage('Hello World!');
+					if (selection === undefined || selection === null) {
+						throw new Error("missing selection");
+					} else {
+						return selection;
+					}
+				},
+				toError
+			)),
+			TE.chain(logGroup =>
+				P.pipe(
+					safeExec(`aws logs describe-log-streams --log-group-name ${logGroup} --query logStreams[*].logStreamName`),
+					TE.map(v => ({ logGroup, logStreams: v }))
+				)
+			),
+			TE.chain(({ logGroup, logStreams }) =>
+				P.pipe(
+					TE.fromEither(
+						E.parseJSON(logStreams, toError) as E.Either<Error, string[]>
+					),
+					TE.map(v => ({ logGroup, logStreams: v }))
+				)
+			),
+			TE.chain((userSelection) => TE.tryCatch(
+				async () => {
+					const selection = await thenableToPromise(vscode.window.showQuickPick(userSelection.logStreams));
+
+					if (selection === undefined || selection === null) {
+						throw new Error("missing selection");
+					} else {
+						return { ...userSelection, streamSelected: selection };
+					}
+				},
+				toError
+			)),
+			TE.chain(({ logGroup, streamSelected }) =>
+				safeExec(`aws logs get-log-events --log-group-name '${logGroup}' --log-stream-name '${streamSelected}'`)
+			)
+		)();
+
+		P.pipe(
+			res,
+			E.fold(
+				(e) => vscode.window.showErrorMessage(e.message),
+				(v) => {
+					console.log(v);
+					return vscode.window.showInformationMessage(v);
+				}
+			),
+		);
 	});
 
 	context.subscriptions.push(disposable);
 }
 
+
+
 // this method is called when your extension is deactivated
-export function deactivate() {}
+export function deactivate() { }
