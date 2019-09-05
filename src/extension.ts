@@ -5,32 +5,15 @@ import * as T from "fp-ts/lib/Task";
 import * as P from "fp-ts/lib/pipeable";
 import { exec } from "child_process";
 import { toError } from 'fp-ts/lib/Either';
-
-const thenableToPromise = <T>(thenable: Thenable<T>) => new Promise<T>((res, rej) => {
-	thenable.then((v) => res(v), (reasons) => rej(reasons));
-});
-
-const safeExec = (cmd: string): TE.TaskEither<Error, string> =>
-	TE.tryCatch(
-		() => new Promise<string>((res, rej) => {
-			exec(cmd, (err, stdout, stderr) => {
-				if (err) {
-					rej(err);
-				} else {
-					res(stdout);
-				}
-
-				console.log("STDERR ", stderr);
-			});
-		}),
-		toError
-	);
+import { safeExec, thenableToPromise, withProgress } from './utils';
 
 export function activate(context: vscode.ExtensionContext) {
 
 	console.log('Congratulations, your extension "aws-2-vs" is now active!');
 
-	let disposable = vscode.commands.registerCommand('extension.helloWorld', async () => {
+	let disposable = vscode.commands.registerCommand('extension.CloudWatchLogs', async () => {
+		console.log('Start');
+
 		const res = await P.pipe(
 			safeExec("aws logs describe-log-groups --query logGroups[*].logGroupName"),
 			TE.chain(v =>
@@ -86,7 +69,6 @@ export function activate(context: vscode.ExtensionContext) {
 			E.fold(
 				(e) => vscode.window.showErrorMessage(e.message),
 				(v) => {
-					console.log(v);
 					return vscode.window.showInformationMessage(v);
 				}
 			),
