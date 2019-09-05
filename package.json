@@ -14,6 +14,24 @@
 	],
 	"main": "./out/extension.js",
 	"contributes": {
+		"viewsContainers": {
+			"activitybar": [
+				{
+					"id": "streamLogs",
+					"title": "Stream log",
+					"icon": "web-evc-exclusive-notavailable.png"
+				}
+			]
+		},
+		"views": {
+			"stream-logs": [
+				{
+					"id": "streamLogs",
+					"name": "Aws stream log",
+					"when": "stream"
+				}
+			]
+		},
 		"commands": [
 			{
 				"command": "extension.CloudWatchLogs",
