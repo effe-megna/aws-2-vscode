@@ -7,6 +7,9 @@ import { pipe } from 'fp-ts/lib/pipeable';
 import { monadAws } from "./monadAws";
 import { foldOrThrowTE } from './utils';
 import { monadvsCode } from './monadVsCode';
+import { sequenceT } from 'fp-ts/lib/Apply';
+
+const sequenceTOption = sequenceT(O.option);
 
 type Node = LogGroupItem | EventStreamItem;
 
@@ -19,7 +22,21 @@ export default class LogsDataProvider implements vscode.TreeDataProvider<Node> {
 	readonly onDidChangeTreeData: vscode.Event<Node | undefined> = this._onDidChangeTreeData.event;
 	groupNameFilter: string | undefined = undefined;
 
-	constructor(private workspaceRoot: string) { }
+	constructor(private workspaceRoot: string) {
+		vscode.commands.registerCommand("cloudwatchLogs.onEventStreamClick", async (eventName?: string, groupName?: string) => {
+			pipe(
+				sequenceTOption(
+					O.fromNullable(groupName),
+					O.fromNullable(eventName)
+				),
+				TE.fromOption(() => new Error("Something goes wrong")),
+				TE.chain(([g, e]) => monadAws.logEvents(g, e)),
+				TE.chain(log => monadvsCode.workspace.openTextDocument({ content: log, language: "txt" })),
+				TE.chain(textDocument => monadvsCode.window.showTextDocument(textDocument, vscode.ViewColumn.Beside, true)),
+				TE.mapLeft(e => monadvsCode.window.showErrorMessage(e.message))
+			)();
+		});
+	}
 
 	refresh(): void {
 		this._onDidChangeTreeData.fire();
@@ -28,13 +45,6 @@ export default class LogsDataProvider implements vscode.TreeDataProvider<Node> {
 	getTreeItem(element: Node): vscode.TreeItem {
 		return element;
 	}
-
-	getEventsItem = (groupName: string): TE.TaskEither<Error, EventStreamItem[]> => pipe(
-		monadAws.logStreams(groupName),
-		TE.map(xs => xs.map(
-			eventName => EventStreamItem.of(eventName, eventName, groupName)
-		))
-	)
 
 	applyGroupNameFilter = (groupNameFilter: string | undefined) => {
 		this.groupNameFilter = groupNameFilter;
@@ -49,7 +59,12 @@ export default class LogsDataProvider implements vscode.TreeDataProvider<Node> {
 					x => this.groupNameFilter ? x.includes(this.groupNameFilter) : true
 				)),
 				TE.map(xs => xs.map(
-					eventName => EventStreamItem.of(eventName, eventName, node.groupName)
+					eventName => EventStreamItem.of(eventName, eventName, node.groupName, {
+						command: "cloudwatchLogs.onEventStreamClick",
+						title: "Show log",
+						tooltip: "Show log",
+						arguments: [eventName, node.groupName]
+					})
 				))
 			);
 		}
@@ -119,8 +134,8 @@ class EventStreamItem extends vscode.TreeItem {
 		return `${this.label}`;
 	}
 
-	static of(label: string, eventName: string, groupName: string) {
-		return new EventStreamItem(label, eventName, groupName, vscode.TreeItemCollapsibleState.Collapsed);
+	static of(label: string, eventName: string, groupName: string, command: vscode.Command) {
+		return new EventStreamItem(label, eventName, groupName, vscode.TreeItemCollapsibleState.Collapsed, command);
 	}
 
 	contextValue = 'event-stream-item';

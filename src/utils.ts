@@ -13,10 +13,10 @@ export const safeExec = (cmd: string): TE.TaskEither<Error, string> =>
   TE.tryCatch(
     () => new Promise<string>((res, rej) => {
       exec(cmd, (err, stdout, stderr) => {
-        if (err) {
-          rej(err);
-        } else {
+        if (stdout) {
           res(stdout);
+        } else {
+          rej(err);
         }
 
         console.log("STDERR ", stderr);

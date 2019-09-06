@@ -58,6 +58,14 @@
 					"light": "media/light/icon-search.svg",
 					"dark": "media/dark/icon-search.svg"
 				}
+			},
+			{
+				"command": "cloudwatchLogs.refreshLog",
+				"title": "Refresh log",
+				"icon": {
+					"light": "media/light/icon-refresh.svg",
+					"dark": "media/dark/icon-refresh.svg"
+				}
 			}
 		],
 		"menus": {
@@ -76,6 +84,13 @@
 					"command": "cloudwatchLogs.showLogGroupSearch",
 					"when": "view == cloudwatchLogs",
 					"group": "navigation"
+				}
+			],
+			"view/item/context": [
+				{
+					"command": "cloudwatchLogs.refreshLog",
+					"when": "view == cloudwatchLogs",
+					"group": "inline"
 				}
 			]
 		}

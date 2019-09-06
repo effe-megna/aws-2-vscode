@@ -2,7 +2,7 @@ import { pipe } from "fp-ts/lib/pipeable";
 import * as TE from "fp-ts/lib/TaskEither";
 import * as IO from "fp-ts/lib/IO";
 import * as E from 'fp-ts/lib/Either';
-import { window, ProgressLocation, InputBoxOptions } from "vscode";
+import { window, ProgressLocation, InputBoxOptions, TextDocument, workspace, ViewColumn, TextEditor } from "vscode";
 
 import { thenableToPromise } from "./utils";
 
@@ -11,7 +11,11 @@ export interface MonadVsCode {
     showInputBox: (options?: InputBoxOptions) => TE.TaskEither<Error, string>,
     showQuickPick: (items: string[]) => TE.TaskEither<Error, string>,
     withProgress: <A>() => (t: TE.TaskEither<Error, A>) => TE.TaskEither<Error, A>,
-    showErrorMessage: (message: string) => void
+    showErrorMessage: (message: string) => void,
+    showTextDocument: (document: TextDocument, column?: ViewColumn, preserveFocus?: boolean) => TE.TaskEither<Error, TextEditor>
+  };
+  workspace: {
+    openTextDocument: (options?: { language?: string; content?: string; }) => TE.TaskEither<Error, TextDocument>
   };
 }
 
@@ -77,6 +81,16 @@ export const monadvsCode: MonadVsCode = {
     showInputBox: showInputBoxTE,
     showQuickPick: showQuickPickTE,
     showErrorMessage: showErrorMessage,
-    withProgress: withProgressTE
+    withProgress: withProgressTE,
+    showTextDocument: (document, column, preserveFocus) => TE.tryCatch(
+      () => thenableToPromise(window.showTextDocument(document, column, preserveFocus)),
+      E.toError
+    )
+  },
+  workspace: {
+    openTextDocument: (options?: { language?: string; content?: string; }) => TE.tryCatch(
+      () => thenableToPromise(workspace.openTextDocument(options)),
+      E.toError
+    )
   }
 };
