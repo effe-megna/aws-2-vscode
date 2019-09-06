@@ -10,8 +10,10 @@
 		"Other"
 	],
 	"activationEvents": [
-		"onCommand:extension.CloudWatchLogs",
-		"onView:cloudwatchLogs"
+		"onView:cloudwatchLogs",
+		"onCommand:cloudwatchLogs.refreshGroups",
+		"onCommand:cloudwatchLogs.showLogGroupSearch",
+		"onCommand:cloudwatchLogs.clearGroupNameFilter"
 	],
 	"main": "./out/extension.js",
 	"contributes": {
@@ -28,16 +30,55 @@
 			"cloudwatch-logs": [
 				{
 					"id": "cloudwatchLogs",
-					"name": "Logs Groups"
+					"name": "Log Groups"
 				}
 			]
 		},
 		"commands": [
 			{
-				"command": "extension.CloudWatchLogs",
-				"title": "Cloudwatch logs"
+				"command": "cloudwatchLogs.refreshGroups",
+				"title": "Refresh",
+				"icon": {
+					"light": "media/light/icon-refresh.svg",
+					"dark": "media/dark/icon-refresh.svg"
+				}
+			},
+			{
+				"command": "cloudwatchLogs.clearGroupNameFilter",
+				"title": "Clear",
+				"icon": {
+					"light": "media/light/icon-clear.svg",
+					"dark": "media/dark/icon-clear.svg"
+				}
+			},
+			{
+				"command": "cloudwatchLogs.showLogGroupSearch",
+				"title": "Search LogGroup",
+				"icon": {
+					"light": "media/light/icon-search.svg",
+					"dark": "media/dark/icon-search.svg"
+				}
 			}
-		]
+		],
+		"menus": {
+			"view/title": [
+				{
+					"command": "cloudwatchLogs.refreshGroups",
+					"when": "view == cloudwatchLogs",
+					"group": "navigation"
+				},
+				{
+					"command": "cloudwatchLogs.clearGroupNameFilter",
+					"when": "view == cloudwatchLogs",
+					"group": "navigation"
+				},
+				{
+					"command": "cloudwatchLogs.showLogGroupSearch",
+					"when": "view == cloudwatchLogs",
+					"group": "navigation"
+				}
+			]
+		}
 	},
 	"scripts": {
 		"vscode:prepublish": "npm run compile",

@@ -17,6 +17,7 @@ export default class LogsDataProvider implements vscode.TreeDataProvider<Node> {
 
 	private _onDidChangeTreeData: vscode.EventEmitter<Node | undefined> = new vscode.EventEmitter<Node | undefined>();
 	readonly onDidChangeTreeData: vscode.Event<Node | undefined> = this._onDidChangeTreeData.event;
+	groupNameFilter: string | undefined = undefined;
 
 	constructor(private workspaceRoot: string) { }
 
@@ -35,10 +36,18 @@ export default class LogsDataProvider implements vscode.TreeDataProvider<Node> {
 		))
 	)
 
+	applyGroupNameFilter = (groupNameFilter: string | undefined) => {
+		this.groupNameFilter = groupNameFilter;
+		this.refresh();
+	}
+
 	getNodes = (node?: Node): TE.TaskEither<Error, Node[]> => {
 		if (node && isLogGroupItem(node)) {
 			return pipe(
 				monadAws.logStreams(node.groupName),
+				TE.map(xs => xs.filter(
+					x => this.groupNameFilter ? x.includes(this.groupNameFilter) : true
+				)),
 				TE.map(xs => xs.map(
 					eventName => EventStreamItem.of(eventName, eventName, node.groupName)
 				))
@@ -47,6 +56,9 @@ export default class LogsDataProvider implements vscode.TreeDataProvider<Node> {
 		else {
 			return pipe(
 				monadAws.logGroups(),
+				TE.map(xs => xs.filter(
+					x => this.groupNameFilter ? x.includes(this.groupNameFilter) : true
+				)),
 				TE.map(xs => xs.map(
 					groupName => LogGroupItem.of(groupName, groupName)
 				))
@@ -54,7 +66,7 @@ export default class LogsDataProvider implements vscode.TreeDataProvider<Node> {
 		}
 	}
 
-	async getChildren(element?: Node): Promise<Node[]> {
+	getChildren(element?: Node): Promise<Node[]> {
 		if (element && isEventStreamItem(element)) {
 			//@ts-ignore
 			return null;

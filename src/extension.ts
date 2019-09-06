@@ -16,6 +16,21 @@ export function activate(context: vscode.ExtensionContext) {
 
 	vscode.window.registerTreeDataProvider("cloudwatchLogs", provider);
 
+	vscode.commands.registerCommand("cloudwatchLogs.refreshGroups", () => provider.refresh());
+	vscode.commands.registerCommand("cloudwatchLogs.clearGroupNameFilter", () => provider.applyGroupNameFilter(undefined));
+	vscode.commands.registerCommand("cloudwatchLogs.showLogGroupSearch", async () => {
+		pipe(
+			await monadvsCode.window.showInputBox({
+				placeHolder: "Type something for filter log groups name",
+				value: provider.groupNameFilter
+			})(),
+			E.fold(
+				(e) => monadvsCode.window.showErrorMessage(e.message),
+				(v) => { provider.applyGroupNameFilter(v); }
+			)
+		);
+	});
+
 	let disposable = vscode.commands.registerCommand('extension.CloudWatchLogs', async () => {
 		console.log('Start');
 
@@ -66,7 +81,7 @@ export function activate(context: vscode.ExtensionContext) {
 	});
 
 	context.subscriptions.push(disposable);
-}			
+}
 
 // this method is called when your extension is deactivated
 export function deactivate() { }
