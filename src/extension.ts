@@ -8,12 +8,13 @@ export function activate(context: vscode.ExtensionContext) {
 
 	console.log('Congratulations, your extension "aws-2-vs" is now active!');
 
+	//@ts-ignore
+	const provider = new DepNodeProvider(vscode.workspace.rootPath);
+
+	vscode.window.registerTreeDataProvider("cloudwatchLogs", provider);
+
 	let disposable = vscode.commands.registerCommand('extension.CloudWatchLogs', async () => {
 		console.log('Start');
-
-		const a = new DepNodeProvider("stream-logs");
-
-		vscode.window.registerTreeDataProvider("streamLogs", a);
 
 		// const a = vscode.window.createTreeView('1', {
 		// 	canSelectMany: true,
@@ -80,10 +81,10 @@ export function activate(context: vscode.ExtensionContext) {
 	context.subscriptions.push(disposable);
 }
 
-export class DepNodeProvider implements vscode.TreeDataProvider<LogStreamItem> {
+export class DepNodeProvider implements vscode.TreeDataProvider<CloudwatchItem> {
 
-	private _onDidChangeTreeData: vscode.EventEmitter<LogStreamItem | undefined> = new vscode.EventEmitter<LogStreamItem | undefined>();
-	readonly onDidChangeTreeData: vscode.Event<LogStreamItem | undefined> = this._onDidChangeTreeData.event;
+	private _onDidChangeTreeData: vscode.EventEmitter<CloudwatchItem | undefined> = new vscode.EventEmitter<CloudwatchItem | undefined>();
+	readonly onDidChangeTreeData: vscode.Event<CloudwatchItem | undefined> = this._onDidChangeTreeData.event;
 
 	constructor(private workspaceRoot: string) { }
 
@@ -91,11 +92,11 @@ export class DepNodeProvider implements vscode.TreeDataProvider<LogStreamItem> {
 		this._onDidChangeTreeData.fire();
 	}
 
-	getTreeItem(element: LogStreamItem): vscode.TreeItem {
+	getTreeItem(element: CloudwatchItem): vscode.TreeItem {
 		return element;
 	}
 
-	getChildren(element?: LogStreamItem): Thenable<LogStreamItem[]> {
+	getChildren(element?: CloudwatchItem): Thenable<CloudwatchItem[]> {
 		return Promise.resolve([
 			this.toDep("1"),
 			this.toDep("2"),
@@ -105,12 +106,12 @@ export class DepNodeProvider implements vscode.TreeDataProvider<LogStreamItem> {
 		]);
 	}
 
-	toDep = (label: string): LogStreamItem => {
-		return new LogStreamItem(label, vscode.TreeItemCollapsibleState.Collapsed);
+	toDep = (label: string): CloudwatchItem => {
+		return new CloudwatchItem(label, vscode.TreeItemCollapsibleState.Collapsed);
 	}
 }
 
-export class LogStreamItem extends vscode.TreeItem {
+export class CloudwatchItem extends vscode.TreeItem {
 	constructor(
 		public readonly label: string,
 		public readonly collapsibleState: vscode.TreeItemCollapsibleState,
@@ -128,7 +129,7 @@ export class LogStreamItem extends vscode.TreeItem {
 	// 	dark: path.join(__filename, '..', '..', 'resources', 'dark', 'dependency.svg')
 	// };
 
-	contextValue = 'dependency';
+	contextValue = 'cloudwatch-item';
 }
 
 
