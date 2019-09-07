@@ -1,9 +1,6 @@
 import * as vscode from 'vscode';
-import * as TE from "fp-ts/lib/TaskEither";
-import * as E from "fp-ts/lib/Either";
 import { pipe } from "fp-ts/lib/pipeable";
 
-import { safeExec, parseJsonTE } from './utils';
 import { monadvsCode } from "./monadVsCode";
 import LogsDataProvider from "./logsDataProvider";
 
@@ -27,7 +24,7 @@ export function activate(context: vscode.ExtensionContext) {
 				)
 			);
 		}),
-		vscode.commands.registerCommand("cloudwatchLogs.refreshLog", (e) => "")
+		vscode.commands.registerCommand("cloudwatchLogs.refreshLog", (_) => monadvsCode.window.showInformationMessage("Feature incoming 🚀"))
 	);
 }
 
