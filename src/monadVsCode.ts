@@ -56,10 +56,7 @@ const withProgressTE = <A>(title?: string, location?: ProgressLocation) => (task
           .then(v => {
             pipe(
               v,
-              E.fold(
-                (e) => { throw e; },
-                (a) => resolve(a)
-              )
+              E.fold(reject, resolve)
             );
           });
 

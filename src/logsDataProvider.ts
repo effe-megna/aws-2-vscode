@@ -7,7 +7,6 @@ import { sequenceT } from 'fp-ts/lib/Apply';
 
 import { monadAws } from "./monadAws";
 import { foldOrThrowTE, tap } from './utils';
-import { CloudwatchLogDecoder } from "./types";
 import { monadvsCode } from './monadVsCode';
 
 const sequenceTOption = sequenceT(O.option);
@@ -40,6 +39,11 @@ export default class LogsDataProvider implements vscode.TreeDataProvider<Node> {
 				E.fold(
 					e => monadvsCode.window.showErrorMessage(e.message),
 					v => {
+						if (v.events.length === 0) {
+							monadvsCode.window.showInformationMessage("No logs founded for this stream");
+							return;
+						}
+
 						const panel = vscode.window.createWebviewPanel(
 							'logPanel',
 							'Cloudwatch log',

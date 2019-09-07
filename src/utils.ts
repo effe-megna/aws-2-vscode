@@ -18,8 +18,6 @@ export const safeExec = (cmd: string): TE.TaskEither<Error, string> =>
         } else {
           rej(err);
         }
-
-        console.log("STDERR ", stderr);
       });
     }),
     E.toError
