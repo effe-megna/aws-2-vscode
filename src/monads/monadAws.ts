@@ -3,8 +3,8 @@ import * as TE from "fp-ts/lib/TaskEither";
 import * as E from "fp-ts/lib/Either";
 import * as t from "io-ts";
 
-import { safeExec, parseJsonTE } from "./utils";
-import { CloudwatchLog, CloudwatchLogDecoder } from "./types";
+import { safeExec, parseJsonTE } from "../utils";
+import { CloudwatchLog, CloudwatchLogDecoder } from "../types";
 
 export interface MonadAws {
   logGroups: () => TE.TaskEither<Error, string[]>;

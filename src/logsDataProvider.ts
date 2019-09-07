@@ -5,9 +5,8 @@ import * as O from "fp-ts/lib/Option";
 import { pipe } from 'fp-ts/lib/pipeable';
 import { sequenceT } from 'fp-ts/lib/Apply';
 
-import { monadAws } from "./monadAws";
 import { foldOrThrowTE, tap } from './utils';
-import { monadvsCode } from './monadVsCode';
+import { monadvsCode, monadAws } from './monads';
 
 const sequenceTOption = sequenceT(O.option);
 
