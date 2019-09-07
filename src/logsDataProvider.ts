@@ -3,11 +3,12 @@ import * as TE from "fp-ts/lib/TaskEither";
 import * as E from "fp-ts/lib/Either";
 import * as O from "fp-ts/lib/Option";
 import { pipe } from 'fp-ts/lib/pipeable';
+import { sequenceT } from 'fp-ts/lib/Apply';
 
 import { monadAws } from "./monadAws";
 import { foldOrThrowTE, tap } from './utils';
+import { CloudwatchLogDecoder } from "./types";
 import { monadvsCode } from './monadVsCode';
-import { sequenceT } from 'fp-ts/lib/Apply';
 
 const sequenceTOption = sequenceT(O.option);
 
@@ -24,18 +25,62 @@ export default class LogsDataProvider implements vscode.TreeDataProvider<Node> {
 
 	constructor(private workspaceRoot: string) {
 		vscode.commands.registerCommand("cloudwatchLogs.onEventStreamClick", async (eventName?: string, groupName?: string) => {
-			pipe(
-				sequenceTOption(
-					O.fromNullable(groupName),
-					O.fromNullable(eventName)
-				),
-				TE.fromOption(() => new Error("Something goes wrong")),
-				TE.chain(([g, e]) => monadAws.logEvents(g, e)),
-				TE.chain(log => monadvsCode.workspace.openTextDocument({ content: log, language: "txt" })),
-				TE.chain(textDocument => monadvsCode.window.showTextDocument(textDocument, vscode.ViewColumn.Beside, true)),
-				monadvsCode.window.withProgress("Loading..."),
-				TE.mapLeft(e => monadvsCode.window.showErrorMessage(e.message))
-			)();
+			// open text document with messages
+			// const textDocument = await pipe(
+			// 	sequenceTOption(
+			// 		O.fromNullable(groupName),
+			// 		O.fromNullable(eventName)
+			// 	),
+			// 	TE.fromOption(() => new Error("Something goes wrong")),
+			// 	TE.chain(([g, e]) => monadAws.logEvents(g, e)),
+			// 	TE.chain(log => {
+			// 		const content = log.events.map(l => l.message).toString()
+
+			// 		return monadvsCode.workspace.openTextDocument({ content: "<h2 style='color: red;'>123<h2/>", language: "html" });
+			// 	}),
+			// 	monadvsCode.window.withProgress("Loading...")
+			// )();
+
+			// pipe(
+			// 	textDocument,
+			// 	E.fold(
+			// 		e => monadvsCode.window.showErrorMessage(e.message),
+			// 		v => monadvsCode.window.showTextDocument(v, vscode.ViewColumn.Beside, true)()
+			// 	)
+			// );
+
+			// const textDocument = await pipe(
+			// 	sequenceTOption(
+			// 		O.fromNullable(groupName),
+			// 		O.fromNullable(eventName)
+			// 	),
+			// 	TE.fromOption(() => new Error("Something goes wrong")),
+			// 	TE.chain(([g, e]) => monadAws.logEvents(g, e)),
+			// 	TE.chain(log => {
+			// 		const content = log.events.map(l => l.message).toString()
+
+			// 		return monadvsCode.workspace.openTextDocument({ content: "<h2 style='color: red;'>123<h2/>", language: "html" });
+			// 	}),
+			// 	monadvsCode.window.withProgress("Loading...")
+			// )();
+
+			// pipe(
+			// 	textDocument,
+			// 	E.fold(
+			// 		e => monadvsCode.window.showErrorMessage(e.message),
+			// 		v => monadvsCode.window.showTextDocument(v, vscode.ViewColumn.Beside, true)()
+			// 	)
+			// );
+
+			// const panel = vscode.window.createWebviewPanel(
+      //   'catCoding',
+      //   'Cat Coding',
+      //   vscode.ViewColumn.One,
+      //   {}
+      // );
+
+      // // And set its HTML content
+      // panel.webview.html = getWebviewContent();
 		});
 	}
 

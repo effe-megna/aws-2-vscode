@@ -114,6 +114,7 @@
 		"vscode-test": "^1.0.2"
 	},
 	"dependencies": {
-		"fp-ts": "^2.0.5"
+		"fp-ts": "^2.0.5",
+		"io-ts": "^2.0.1"
 	}
 }
