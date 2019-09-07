@@ -5,8 +5,10 @@ import * as O from "fp-ts/lib/Option";
 import { pipe } from 'fp-ts/lib/pipeable';
 import { sequenceT } from 'fp-ts/lib/Apply';
 
-import { foldOrThrowTE, tap } from './utils';
-import { monadvsCode, monadAws } from './monads';
+import { foldOrThrowTE, tap } from '../utils';
+import { monadvsCode, monadAws } from '../monads';
+import { LogGroupItem } from './LogGroupItem';
+import { EventStreamItem } from './EventStreamItem';
 
 const sequenceTOption = sequenceT(O.option);
 
@@ -149,51 +151,4 @@ export default class LogsDataProvider implements vscode.TreeDataProvider<Node> {
 			foldOrThrowTE
 		);
 	}
-}
-
-class LogGroupItem extends vscode.TreeItem {
-	public readonly tag = "log-group";
-
-	private constructor(
-		public readonly label: string,
-		public readonly groupName: string,
-		public readonly collapsibleState: vscode.TreeItemCollapsibleState,
-		public readonly command?: vscode.Command
-	) {
-		super(label, collapsibleState);
-	}
-
-	get tooltip(): string {
-		return `${this.label}`;
-	}
-
-	static of(label: string, groupName: string) {
-		return new LogGroupItem(label, groupName, vscode.TreeItemCollapsibleState.Collapsed);
-	}
-
-	contextValue = 'log-group-item';
-}
-
-class EventStreamItem extends vscode.TreeItem {
-	public readonly tag = "event-stream";
-
-	private constructor(
-		public readonly label: string,
-		public readonly groupName: string,
-		public readonly eventName: string,
-		public readonly collapsibleState: vscode.TreeItemCollapsibleState,
-		public readonly command?: vscode.Command
-	) {
-		super(label, collapsibleState);
-	}
-
-	get tooltip(): string {
-		return `${this.label}`;
-	}
-
-	static of(label: string, eventName: string, groupName: string, command: vscode.Command) {
-		return new EventStreamItem(label, eventName, groupName, vscode.TreeItemCollapsibleState.Collapsed, command);
-	}
-
-	contextValue = 'event-stream-item';
 }

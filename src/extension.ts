@@ -5,7 +5,7 @@ import { pipe } from "fp-ts/lib/pipeable";
 import { sync } from "command-exists";
 
 import { monadvsCode } from "./monads";
-import LogsDataProvider from "./logsDataProvider";
+import LogsDataProvider from "./dataprovider";
 
 export function activate(context: vscode.ExtensionContext) {
 
