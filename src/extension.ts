@@ -2,11 +2,19 @@ import * as vscode from 'vscode';
 import * as E from "fp-ts/lib/Either";
 import * as O from "fp-ts/lib/Option";
 import { pipe } from "fp-ts/lib/pipeable";
+import { sync } from "command-exists";
 
 import { monadvsCode } from "./monadVsCode";
 import LogsDataProvider from "./logsDataProvider";
 
 export function activate(context: vscode.ExtensionContext) {
+
+	if (!sync("aws")) {
+		monadvsCode.window.showErrorMessage("aws-2-vs require aws command in path");
+
+		return;
+	}
+
 	//@ts-ignore
 	const provider = new LogsDataProvider(vscode.workspace.rootPath);
 	vscode.window.registerTreeDataProvider("cloudwatchLogs", provider);

@@ -14,6 +14,7 @@ export interface MonadVsCode {
     withProgress: <A>(title?: string, location?: ProgressLocation) => (t: TE.TaskEither<Error, A>) => TE.TaskEither<Error, A>,
     showErrorMessage: (message: string) => void,
     showInformationMessage: (message: string) => void,
+    showWarningMessage: (message: string) => void,
     showTextDocument: (document: TextDocument, column?: ViewColumn, preserveFocus?: boolean) => TE.TaskEither<Error, TextEditor>
   };
   workspace: {
@@ -76,6 +77,7 @@ export const monadvsCode: MonadVsCode = {
     withProgress: withProgressTE,
     showErrorMessage: (message) => { window.showErrorMessage(message); },
     showInformationMessage: (message) => { window.showInformationMessage(message); },
+    showWarningMessage: (message) => { window.showWarningMessage(message); },
     showTextDocument: (document, column, preserveFocus) => TE.tryCatch(
       () => thenableToPromise(window.showTextDocument(document, column, preserveFocus)),
       E.toError
