@@ -44,3 +44,5 @@ export const foldOrThrow = <A>(e: E.Either<Error, A>): A =>
       v => v
     )
   );
+
+export const tap = <A>(fn: (v: A) => unknown) => (v: A): A => { fn(v); return v; };

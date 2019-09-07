@@ -5,7 +5,7 @@ import * as O from "fp-ts/lib/Option";
 import { pipe } from 'fp-ts/lib/pipeable';
 
 import { monadAws } from "./monadAws";
-import { foldOrThrowTE } from './utils';
+import { foldOrThrowTE, tap } from './utils';
 import { monadvsCode } from './monadVsCode';
 import { sequenceT } from 'fp-ts/lib/Apply';
 
@@ -55,9 +55,6 @@ export default class LogsDataProvider implements vscode.TreeDataProvider<Node> {
 		if (node && isLogGroupItem(node)) {
 			return pipe(
 				monadAws.logStreams(node.groupName),
-				TE.map(xs => xs.filter(
-					x => this.groupNameFilter ? x.includes(this.groupNameFilter) : true
-				)),
 				TE.map(xs => xs.map(
 					eventName => EventStreamItem.of(eventName, eventName, node.groupName, {
 						command: "cloudwatchLogs.onEventStreamClick",
@@ -89,6 +86,13 @@ export default class LogsDataProvider implements vscode.TreeDataProvider<Node> {
 
 		return pipe(
 			this.getNodes(element),
+			TE.map(
+				tap(nodes => {
+					if (nodes.length === 0) {
+						monadvsCode.window.showInformationMessage("No data returned");
+					}
+				})
+			),
 			foldOrThrowTE
 		);
 	}

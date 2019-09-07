@@ -16,10 +16,10 @@ export const monadAws: MonadAws = {
     TE.chain(v => parseJsonTE<string[]>(v)),
   ),
   logStreams: (groupName: string) => pipe(
-    safeExec(`aws logs describe-log-streams --log-group-name ${groupName} --query logStreams[*].logStreamName`),
+    safeExec(`aws logs describe-log-streams --log-group-name ${groupName} --query logStreams[*].logStreamName --descending --limit 20`),
     TE.chain(v => parseJsonTE<string[]>(v))
   ),
   logEvents: (groupName, streamName) => pipe(
-    safeExec(`aws logs get-log-events --log-group-name '${groupName}' --log-stream-name '${streamName}'`)
+    safeExec(`aws logs get-log-events --log-group-name '${groupName}' --log-stream-name '${streamName}' --limit 40`)
   )
 };

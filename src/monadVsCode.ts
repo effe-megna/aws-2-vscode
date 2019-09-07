@@ -12,6 +12,7 @@ export interface MonadVsCode {
     showQuickPick: (items: string[]) => TE.TaskEither<Error, string>,
     withProgress: <A>() => (t: TE.TaskEither<Error, A>) => TE.TaskEither<Error, A>,
     showErrorMessage: (message: string) => void,
+    showInformationMessage: (message: string) => void,
     showTextDocument: (document: TextDocument, column?: ViewColumn, preserveFocus?: boolean) => TE.TaskEither<Error, TextEditor>
   };
   workspace: {
@@ -44,8 +45,6 @@ const showQuickPickTE = (items: string[]) => TE.tryCatch(
   },
   E.toError
 );
-
-const showErrorMessage = (message: string): void => { window.showErrorMessage(message); };
 
 const withProgressTE = <A>() => (taskEither: TE.TaskEither<Error, A>): TE.TaskEither<Error, A> => TE.tryCatch<Error, A>(
   () => {
@@ -80,8 +79,9 @@ export const monadvsCode: MonadVsCode = {
   window: {
     showInputBox: showInputBoxTE,
     showQuickPick: showQuickPickTE,
-    showErrorMessage: showErrorMessage,
     withProgress: withProgressTE,
+    showErrorMessage: (message) => { window.showErrorMessage(message); },
+    showInformationMessage: (message) => { window.showInformationMessage(message); },
     showTextDocument: (document, column, preserveFocus) => TE.tryCatch(
       () => thenableToPromise(window.showTextDocument(document, column, preserveFocus)),
       E.toError
