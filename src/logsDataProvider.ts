@@ -33,6 +33,7 @@ export default class LogsDataProvider implements vscode.TreeDataProvider<Node> {
 				TE.chain(([g, e]) => monadAws.logEvents(g, e)),
 				TE.chain(log => monadvsCode.workspace.openTextDocument({ content: log, language: "txt" })),
 				TE.chain(textDocument => monadvsCode.window.showTextDocument(textDocument, vscode.ViewColumn.Beside, true)),
+				monadvsCode.window.withProgress("Loading..."),
 				TE.mapLeft(e => monadvsCode.window.showErrorMessage(e.message))
 			)();
 		});

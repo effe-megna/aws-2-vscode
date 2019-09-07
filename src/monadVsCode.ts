@@ -1,6 +1,7 @@
 import { pipe } from "fp-ts/lib/pipeable";
 import * as TE from "fp-ts/lib/TaskEither";
 import * as IO from "fp-ts/lib/IO";
+import * as O from "fp-ts/lib/Option";
 import * as E from 'fp-ts/lib/Either';
 import { window, ProgressLocation, InputBoxOptions, TextDocument, workspace, ViewColumn, TextEditor } from "vscode";
 
@@ -8,9 +9,9 @@ import { thenableToPromise } from "./utils";
 
 export interface MonadVsCode {
   window: {
-    showInputBox: (options?: InputBoxOptions) => TE.TaskEither<Error, string>,
+    showInputBox: (options?: InputBoxOptions) => TE.TaskEither<Error, O.Option<string>>,
     showQuickPick: (items: string[]) => TE.TaskEither<Error, string>,
-    withProgress: <A>() => (t: TE.TaskEither<Error, A>) => TE.TaskEither<Error, A>,
+    withProgress: <A>(title?: string, location?: ProgressLocation) => (t: TE.TaskEither<Error, A>) => TE.TaskEither<Error, A>,
     showErrorMessage: (message: string) => void,
     showInformationMessage: (message: string) => void,
     showTextDocument: (document: TextDocument, column?: ViewColumn, preserveFocus?: boolean) => TE.TaskEither<Error, TextEditor>
@@ -24,11 +25,7 @@ const showInputBoxTE = (options?: InputBoxOptions) => TE.tryCatch(
   async () => {
     const selection = await thenableToPromise(window.showInputBox(options));
 
-    if (selection === undefined || selection === null) {
-      throw new Error("Something goes wrong");
-    } else {
-      return selection;
-    }
+    return O.fromNullable(selection);
   },
   E.toError
 );
@@ -46,12 +43,12 @@ const showQuickPickTE = (items: string[]) => TE.tryCatch(
   E.toError
 );
 
-const withProgressTE = <A>() => (taskEither: TE.TaskEither<Error, A>): TE.TaskEither<Error, A> => TE.tryCatch<Error, A>(
+const withProgressTE = <A>(title?: string, location?: ProgressLocation) => (taskEither: TE.TaskEither<Error, A>): TE.TaskEither<Error, A> => TE.tryCatch<Error, A>(
   () => {
     const action = new Promise<A>((resolve, reject) => {
       window.withProgress({
-        location: ProgressLocation.Notification,
-        title: "🎅 Santa Claus is coming to town",
+        location: location || ProgressLocation.Notification,
+        title: title || "🎅 Santa Claus is coming to town",
       }, (_, token) => {
         const res = taskEither();
 

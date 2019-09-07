@@ -1,4 +1,6 @@
 import * as vscode from 'vscode';
+import * as E from "fp-ts/lib/Either";
+import * as O from "fp-ts/lib/Option";
 import { pipe } from "fp-ts/lib/pipeable";
 
 import { monadvsCode } from "./monadVsCode";
@@ -20,7 +22,7 @@ export function activate(context: vscode.ExtensionContext) {
 				})(),
 				E.fold(
 					(e) => monadvsCode.window.showErrorMessage(e.message),
-					(v) => provider.applyGroupNameFilter(v)
+					O.map(v => provider.applyGroupNameFilter(v))
 				)
 			);
 		}),
