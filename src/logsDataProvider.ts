@@ -46,9 +46,11 @@ export default class LogsDataProvider implements vscode.TreeDataProvider<Node> {
 
 						const panel = vscode.window.createWebviewPanel(
 							'logPanel',
-							'Cloudwatch log',
-							vscode.ViewColumn.Beside,
-							{}
+							`${groupName} ${eventName}`,
+							{
+								viewColumn: vscode.ViewColumn.Beside,
+								preserveFocus: true
+							}
 						);
 
 						function getWebviewContent() {
@@ -83,7 +85,6 @@ export default class LogsDataProvider implements vscode.TreeDataProvider<Node> {
 						</html>`;
 						}
 
-						// And set its HTML content
 						panel.webview.html = getWebviewContent();
 					}
 				)
