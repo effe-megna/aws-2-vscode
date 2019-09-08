@@ -6,6 +6,8 @@ import * as t from "io-ts";
 import { safeExec, parseJsonTE } from "../utils";
 import { CloudwatchLog, CloudwatchLogDecoder } from "../types";
 
+const stringArrayDecoder = t.array(t.string);
+
 export interface MonadAws {
   logGroups: () => TE.TaskEither<Error, string[]>;
   logStreams: (logGroupName: string) => TE.TaskEither<Error, string[]>;
@@ -17,7 +19,7 @@ export const monadAws: MonadAws = {
     safeExec("aws logs describe-log-groups --query logGroups[*].logGroupName"),
     TE.chain(parseJsonTE),
     TE.chain(v => pipe(
-      TE.fromEither(t.array(t.string).decode(v)),
+      TE.fromEither(stringArrayDecoder.decode(v)),
       TE.mapLeft(e => new Error("errors while parsing log groups"))
     ))
   ),
@@ -25,7 +27,7 @@ export const monadAws: MonadAws = {
     safeExec(`aws logs describe-log-streams --log-group-name ${groupName} --query logStreams[*].logStreamName --descending --limit 20`),
     TE.chain(parseJsonTE),
     TE.chain(v => pipe(
-      TE.fromEither(t.array(t.string).decode(v)),
+      TE.fromEither(stringArrayDecoder.decode(v)),
       TE.mapLeft(e => new Error("errors while parsing log streams"))
     ))
   ),

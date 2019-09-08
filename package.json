@@ -22,7 +22,7 @@
 				{
 					"id": "cloudwatch-logs",
 					"title": "Cloudwatch",
-					"icon": "media/dep.svg"
+					"icon": "media/search.svg"
 				}
 			]
 		},

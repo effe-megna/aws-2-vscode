@@ -45,45 +45,87 @@ export default class LogsDataProvider implements vscode.TreeDataProvider<Node> {
 							return;
 						}
 
+						const loadMore = () => {
+							monadvsCode.window.showInformationMessage("load more");
+						};
+
 						const panel = vscode.window.createWebviewPanel(
 							'logPanel',
 							`${groupName} ${eventName}`,
 							{
 								viewColumn: vscode.ViewColumn.Beside,
 								preserveFocus: true
+							},
+							{
+								enableScripts: true
 							}
 						);
 
+						panel.webview.onDidReceiveMessage(
+							message => {
+								switch (message.command) {
+									case 'loadMore':
+										vscode.window.showErrorMessage("load more");
+										return;
+								}
+							}
+						);
+
+						const script = `
+							(function() {
+								const vscode = acquireVsCodeApi();
+								
+								const refreshButton = document.getElementById("refresh-btn");
+
+								refreshButton.onclick = () => {
+									vscode.postMessage({
+										command: 'loadMore'
+									})
+								}
+							}())
+						`;
+
 						function getWebviewContent() {
 							return `<!DOCTYPE html>
-						<html lang="en">
-						<head>
-								<meta charset="UTF-8">
-								<meta name="viewport" content="width=device-width, initial-scale=1.0">
-								<title>Cloudwatch log</title>
-						</head>
-						<body>
-							${v.events.map(e => {
-								let color = "";
+								<html lang="en">
+								<head>
+										<meta charset="UTF-8">
+										<meta name="viewport" content="width=device-width, initial-scale=1.0">
+										<title>Cloudwatch log</title>
+								</head>
+								<body>
+									${v.events.map(e => {
+										let color = "";
 
-								if (e.message.includes("START")) {
-									color = "green";
-								} else if (e.message.includes("END")) {
-									color = "red";
-								} else if (e.message.includes("REPORT")) {
-									color = "yellow";
-								} else {
-									color = "blue";
-								}
+										if (e.message.includes("START")) {
+											color = "green";
+										} else if (e.message.includes("END")) {
+											color = "red";
+										} else if (e.message.includes("REPORT")) {
+											color = "yellow";
+										} else {
+											color = "blue";
+										}
 
-								return (`
-									<div style='border-bottom: 1px solid ${color}; padding: 3px 6px;'>
-										<label style='color: white;'>${e.message}</label>
+										return (`
+											<div style='border-bottom: 1px solid ${color}; padding: 3px 6px;'>
+												<label style='color: white;'>${e.message}</label>
+											</div>
+										`);
+									})}
+									<div style='text-align: center; margin: 10px 0;'>
+										<label 
+											style='text-decoration: underline; color: white; font-size: 18px;'
+											id="refresh-btn"
+										>
+											Refresh
+										</label>
 									</div>
-								`);
-							})}
-						</body>
-						</html>`;
+								</body>
+								<script>
+									${script}
+								</script>
+								</html>`;
 						}
 
 						panel.webview.html = getWebviewContent();
