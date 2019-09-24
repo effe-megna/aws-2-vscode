@@ -4,10 +4,25 @@ import * as E from 'fp-ts/lib/Either';
 import * as O from "fp-ts/lib/Option";
 import * as Array from "fp-ts/lib/Array";
 import { exec } from "child_process";
+import { sequenceT } from "fp-ts/lib/Apply";
 
 export const thenableToPromise = <T>(thenable: Thenable<T>) => new Promise<T>((res, rej) => {
   thenable.then((v) => res(v), (reasons) => rej(reasons));
 });
+
+export const includesOption = (searchString: O.Option<string>) => (a: O.Option<string>): O.Option<string> => {
+  if (O.isNone(a) || O.isNone(searchString)) {
+    return a;
+  }
+
+  return pipe(
+    sequenceT(O.option)(
+      a,
+      searchString
+    ),
+    O.chain(([ab, sb]) => ab.includes(sb) ? a : O.none)
+  );
+};
 
 export const safeExec = (cmd: string): TE.TaskEither<Error, string> =>
   TE.tryCatch(

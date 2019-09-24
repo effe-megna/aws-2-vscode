@@ -21,16 +21,25 @@ export function activate(context: vscode.ExtensionContext) {
 
 	context.subscriptions.push(
 		vscode.commands.registerCommand("cloudwatchLogs.refreshGroups", () => provider.refresh()),
-		vscode.commands.registerCommand("cloudwatchLogs.clearGroupNameFilter", () => provider.applyGroupNameFilter(undefined)),
+		vscode.commands.registerCommand("cloudwatchLogs.clearGroupNameFilter", () => provider.applyGroupNameFilter(O.none)),
 		vscode.commands.registerCommand("cloudwatchLogs.showLogGroupSearch", async () => {
+			//@ts-ignore
+			const preValue: string = pipe(
+				provider.groupNameFilter,
+				O.fold(
+					() => "",
+					v => v
+				)
+			);
+
 			pipe(
 				await monadvsCode.window.showInputBox({
 					placeHolder: "Type something for filter log groups name",
-					value: provider.groupNameFilter
+					value: preValue
 				})(),
 				E.fold(
 					(e) => monadvsCode.window.showErrorMessage(e.message),
-					O.map(v => provider.applyGroupNameFilter(v))
+					O.map(v => provider.applyGroupNameFilter(O.option.of(v)))
 				)
 			);
 		}),
